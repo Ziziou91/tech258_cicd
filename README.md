@@ -34,14 +34,40 @@ Jenkins **agent nodes** connect to A Jenkins **master server** and receive instr
 
 A Jenkins **master node** is the primary Jenkins server instance responsible for managing and coordinating the entire Jenkins environment. It's where all the configurations, job definitions, plugins, and other settings are stored. The master node schedules and delegates tasks to the connected Jenkins slave nodes for execution.
 
-## Building our VM with CICD
+## Building our cloud VM instance with CICD
 
 Jenkins can be configured to trigger the deployment of your application to a cloud virtual machine (VM) after it has passed automated tests. This process is often part of a CI/CD (Continuous Integration/Continuous Delivery) pipeline.
 
 We typically want to our virtual machine before deployment. This allows us to ensure  consistency, reliability, security, and scalability of your deployment process, leading to more robust and efficient application delivery for our end users.
 
-# CICD testing code
-I'm testing my Jenkins build.
+## Guide to creating a job on Jenkins master server
+
+1) Choose create item from the main page, enter a name and then *freestyle project*
+2) Add a description, select the Github project checkbox and then add the project url. Example: `git@github.com:Ziziou91/tech258_cicd.git`
+3) Under *Office 365 Connector* check the option for *Rescrict where this project can be run* and under Label Expression enter `sparta-ubuntu-node`
+![Jenkin job creation step 1](./images/steps/step_1.png)
+4) Under *Source Code Management* select Git. Then add the repository URL. Because we have SSH set up on the repo we are provided with a message that tells us Jenkins failed to connect to the repo.
+5) We fix this by adding the private SSH key for the repo to our Jenkins, and then choose the credential from the dropdown
+![Jenkin job creation step 2](./images/steps/step_2.png)
+6) We need to provide Node and npm for our application. Under *Build Environment* check Provide Node & npm bin/ folder to PATH. We then specify the Node installation as `Sparta-Node-JS`
+7) Under *Build* choose execute shell and then add the follow commands
+   ```shell
+   cd
+   npm install
+   npm test
+   ``` 
+![Jenkins job creation step 3](./images/steps/step_3.png)
+8) Save. Our Jenkins Master node should now be setup to build from our github repo.
+9) We can also setup our Jenkins master node to automatically build our app and test it on an agent node when triggered by a webhook on our github repo. 
+10) Go to the github repo, settings and then webhooks. Under payload URL rnter the url for the jenkins server and append it as so: `http://3.9.14.9:8080/github-webhook/`
+11) For content type choose `application/json`, speifcy the type of event that will trigger the webhook and then set it to active.
+12) The Webhook will send a POST HTTP request to our jenkins server and provide us with a 200 status code if it's setup correctly
+![Jenkins job creation step 4](./images/steps/step_4.png)
+13) Finally, back on the jenkins config page for our job, under *Build Triggers* check GitHub hook trigger for GITScm polling.
+![Jenkins job creation step 5](./images/steps/step_5.png)
+ 
+Now test the trigger!
+
 
 ## CI testing with tech221 from localhost to Jenkins 
 ## Github ssh set up
