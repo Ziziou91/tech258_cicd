@@ -40,7 +40,9 @@ Jenkins can be configured to trigger the deployment of your application to a clo
 
 We typically want to our virtual machine before deployment. This allows us to ensure  consistency, reliability, security, and scalability of your deployment process, leading to more robust and efficient application delivery for our end users.
 
-# CICD testing cde
+# CICD testing code
+I'm testing my Jenkins build
+
 ## CI testing with tech221 from localhost to Jenkins 
 ## Github ssh set up
 ### Testing Jenkins CI
