@@ -47,18 +47,20 @@ We typically want to our virtual machine before deployment. This allows us to en
 3) Under *Office 365 Connector* check the option for *Rescrict where this project can be run* and under Label Expression enter `sparta-ubuntu-node`
 ![Jenkin job creation step 1](./images/steps/step_1.png)
 4) Under *Source Code Management* select Git. Then add the repository URL. Because we have SSH set up on the repo we are provided with a message that tells us Jenkins failed to connect to the repo.
-5) We fix this by adding the private SSH key for the repo to our Jenkins, and then choose the credential from the dropdown
+5) We fix this by adding the private SSH key for the repo to our Jenkins, and then choose the credential from the dropdown. CHANGE BRANCH TO MAIN.
 ![Jenkin job creation step 2](./images/steps/step_2.png)
 6) We need to provide Node and npm for our application. Under *Build Environment* check Provide Node & npm bin/ folder to PATH. We then specify the Node installation as `Sparta-Node-JS`
 7) Under *Build* choose execute shell and then add the follow commands
    ```shell
-   cd
+   cd 
    npm install
    npm test
    ``` 
 ![Jenkins job creation step 3](./images/steps/step_3.png)
 8) Save. Our Jenkins Master node should now be setup to build from our github repo.
+
 9) We can also setup our Jenkins master node to automatically build our app and test it on an agent node when triggered by a webhook on our github repo. 
+
 10) Go to the github repo, settings and then webhooks. Under payload URL rnter the url for the jenkins server and append it as so: `http://3.9.14.9:8080/github-webhook/`
 11) For content type choose `application/json`, speifcy the type of event that will trigger the webhook and then set it to active.
 12) The Webhook will send a POST HTTP request to our jenkins server and provide us with a 200 status code if it's setup correctly
