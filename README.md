@@ -80,6 +80,10 @@ From our config, got to the `post build actions` It's easy to share how we can u
 
 Notice we need to already have the jenkins job ready - jenkins will look for a job that matches the given name. 
 
+We can chain together different jobs to automate a whole range of actions in a pipeline, as shown below:
+
+![Jenkins Automation Server](./images/test_merge/test_merge_0.png)
+
 ## Test code with jenkins before merging to main
 Break down into specific jobs
 
