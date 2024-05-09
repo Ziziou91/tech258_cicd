@@ -98,9 +98,14 @@ Break down into specific jobs
 ### Job 2 - Merge dev branch with main
 
 1) Under Source code managemenet -> git, click `additional behaviours` and then `merge before build`
-2) We can leave the name of the repo blank as it will auto-fill with the one we provided above.
-3) For branch to merge to choose `main`
-4) Do we need this? In build environment we'll need to provide ssh credentials
+2) We set the name of the repository to merge to as `origin`.
+3) Set the branch to merge to as `main`.
+   ![Merge before build settings](./images/test_merge/test_merge_2.png)
+4) Under Post-build actions select `Git Publisher`
+5) Select `Push Only if Build Succeeds` and `Merge Results`
+    ![Post-build Actions](./images/test_merge/test_merge_3.png)
+
+Then test!
 
 ### Job 3 - Transfer code 
 
