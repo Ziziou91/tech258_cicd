@@ -110,6 +110,7 @@ Should job 2 be triggered by a push/merge to main, or be triggered directly by j
 
 
 
+
 3rd job should be to get the code from the main branch and push it to production
 Create an ec2 first with ubuntu 18.04LTS 
 We need to provide a pem key (private ssh key) for jenkins to 
