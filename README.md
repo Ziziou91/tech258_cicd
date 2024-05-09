@@ -52,7 +52,7 @@ We typically want to our virtual machine before deployment. This allows us to en
 6) We need to provide Node and npm for our application. Under *Build Environment* check Provide Node & npm bin/ folder to PATH. We then specify the Node installation as `Sparta-Node-JS`
 7) Under *Build* choose execute shell and then add the follow commands
    ```shell
-   cd 
+   cd app
    npm install
    npm test
    ``` 
@@ -69,6 +69,63 @@ We typically want to our virtual machine before deployment. This allows us to en
 ![Jenkins job creation step 5](./images/steps/step_5.png)
  
 Now test the trigger!
+
+## Post-build Actions with Jenkins
+
+We can configure our jenkins jobs so they run something after launch, such as building another agent node, merging our code or . For example. If we know that our jenkins server is Ubuntu, we can then do a post-build action to run another job.
+
+From our config, got to the `post build actions` It's easy to share how we can use it build another project:
+
+![Post build action](./images/post-build/post_build_step_1.png)
+
+Notice we need to already have the jenkins job ready - jenkins will look for a job that matches the given name. 
+
+## Test code with jenkins before merging to main
+Break down into specific jobs
+
+### Job 1 - listen for push to dev branch, test and then start job 2
+
+1) Test the code on the ec2 instance first 
+2) Create a dev branch using git
+![Creating a dev branch with git](./images/test_merge/test_merge_1.png)
+
+3) Create the first jenkins job. It should:
+   1)  Listen to the webhook setup on the github repo (See 'Guide to creating a job on Jenkins master server' above)
+   2)  Respond to pushes to dev,  
+4) Make a change locally, push it to github
+5) If tests passed trigger job 2 
+
+### Job 2 - Merge dev branch with main
+
+1) Under Source code managemenet -> git, click `additional behaviours` and then `merge before build`
+2) We can leave the name of the repo blank as it will auto-fill with the one we provided above.
+3) For branch to merge to choose `main`
+4) Do we need this? In build environment we'll need to provide ssh credentials
+
+### Job 3 - Transfer code 
+
+Send the tested code to the ec2 instance.
+
+Should job 2 be triggered by a push/merge to main, or be triggered directly by job 1 (It's ultimately the same code right)?
+
+
+
+3rd job should be to get the code from the main branch and push it to production
+Create an ec2 first with ubuntu 18.04LTS 
+We need to provide a pem key (private ssh key) for jenkins to 
+The first time we connect with the pem key it will automatically ask for a fingerprint - if we were manually ssh’ing into a ec2 instance we’d need to provide a fingerprint. How can we do this automatically on Jenkins?
+We need to provide Jenkins server details (required ports to ssh in) to the EC2 instance so it can allow jenkins server to ssh in 
+Copy the new code to the production environment
+Install required dependencies
+Navigate to app folder
+Npm install
+Npm start
+
+
+
+Notice that when we bulid and then look in the console output it will tell us that it's triggered another build, and also provide a link to the next build.
+
+
 
 
 ## CI testing with tech221 from localhost to Jenkins 
@@ -94,4 +151,44 @@ ssh -o "StrictHostKeyChecking=no" ubuntu@ip <<EOF
     pm2 start app.js
 EOF
 ```
+
+## 09/05 notes
                                                   
+We can configure our jenkins jobs so they run something after launch, such as building another project. For example. If we know that our jenkins server is Ubuntu, we can then do a post-build action to run another job.
+
+From our config, got to the `post build actions` It's easy to share how we can use it build another project:
+
+![Post build action](./images/post-build/post_build_step_1.png)
+
+Notice we need to already have the jenkins build ready.
+
+
+
+Create a dev branch using git
+Make a change locally, push to github
+If tests passed trigger the next job to merge the code from dev to main branch in your repo
+The second job should be triggered automatically if the tests pass
+
+3rd job should be to get the code from the main branch and push it to production
+Create an ec2 first with ubuntu 18.04LTS 
+We need to provide a pem key (private ssh key) for jenkins to 
+The first time we connect with the pem key it will automatically ask for a fingerprint - if we were manually ssh’ing into a ec2 instance we’d need to provide a fingerprint. How can we do this automatically on Jenkins?
+We need to provide Jenkins server details (required ports to ssh in) to the EC2 instance so it can allow jenkins server to ssh in 
+Copy the new code to the production environment
+Install required dependencies
+Navigate to app folder
+Npm install
+Npm start
+
+
+
+
+Notice that when we bulid and then look in the console output it will tell us that it's triggered another build, and also provide a link to the next build.
+
+### Todo 
+
+Be able to confidently explain what a webhook is
+
+6) to merge the code from dev to main branch in your repo. Use git publisher. Plugin is already available in Jenkins server.
+7) The second job should be triggered automatically if the tests pass. This job will merge the dev branch with main.
+   NOTE: Avoid using git commands in the execute shell
