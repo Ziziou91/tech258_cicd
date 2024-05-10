@@ -84,20 +84,26 @@ We can chain together different jobs to automate a whole range of actions in a p
 
 ![Jenkins Automation Server](./images/test_merge/test_merge_0.png)
 
-## Test code with jenkins before merging to main
-Break down into specific jobs
+Starting with the happy path, where all three jobs in our pipeline are successfully run:
+
+Commit triggers job 1. if the code passes the automated tests job 2 is run
+Job 2 merges the code from dev branch to the main branch on our github repository, before triggering job 3
+Job 3 creates an EC2 instance and the deploys the application to said instance.
+
+If either our tests or deployment fails Jenkins can send us an automatic notification in the form of an email.
+
+## Jenkins pipeline to test code after pushing to dev, then merge to main
 
 ### Job 1 - listen for push to dev branch, test and then start job 2
 
-1) Test the code on the ec2 instance first 
-2) Create a dev branch using git
+To start with we need a dev branch using git
 ![Creating a dev branch with git](./images/test_merge/test_merge_1.png)
 
-3) Create the first jenkins job. It should:
+1) Create the first jenkins job. It should:
    1)  Listen to the webhook setup on the github repo (See 'Guide to creating a job on Jenkins master server' above)
    2)  Respond to pushes to dev,  
-4) Make a change locally, push it to github
-5) If tests passed trigger job 2 
+2) Make a change locally, push it to github
+3) If tests passed trigger job 2 
 
 ### Job 2 - Merge dev branch with main
 
@@ -106,14 +112,141 @@ Break down into specific jobs
 3) Set the branch to merge to as `main`.
    ![Merge before build settings](./images/test_merge/test_merge_2.png)
 4) Under Post-build actions select `Git Publisher`
-5) Select `Push Only if Build Succeeds` and `Merge Results`
+5) Select `Merge Results`
     ![Post-build Actions](./images/test_merge/test_merge_3.png)
 
 Then test!
 
+### Job 3 - Deploy app on an EC2 instance
 
-### Job 3 - Transfer code 
+**Setting up the EC2 instance**
+Currently we need a live EC2 instance for our job to connect to over SSH, install our app and launch. So before we can start creating the job we need to create and EC2 instance with:
+  1) Ubuntu 18.04LTS
+  2) SSH public key that corresponds to a private key on the Jenkins server
+  3) Network security groups with inbound connections using SSH and HTTP enabled, as well as ports 22, 80, 3000, 8080 open for inbound traffic
+   ![EC2 Security Rules](./images/ec2_deploy/ec2_deploy_1.png)
 
+**Creating the Jenkins job**
+We can then start to create our jenkins job launch the app on our EC2 instance. Note that as with previous scripts we've built, we'll gradually build up the build shell script in complexity, ensuring each steps works before adding to it
+
+1) Log into Jenkins and create a new freestyle project.
+2) Give it a description and set it to discard old builds. Choose 3 - this allows us to keep recent builds and use the console output to refine subsequent builds
+3) Provide the GitHub project url to build the app from
+   ![Jenkins project general config](./images/ec2_deploy/ec2_deploy_2.png)
+
+4) Under `Office 365 Connector` we chose to check restrict where the project can be run. As we had a whole team of people testing their Jenkins jobs it made sense to spread this our over different nodes.
+5) For Sourece Code Management we put in the GitHub repo SSH details, as well as the SSH credentials required. We want the branch to be `main` as it's the branch we merged to in *job 2*
+   ![Jenkins project source code management config](./images/ec2_deploy/ec2_deploy_3.png) 
+
+6) Under build enviroment check *Provide Node and npm bin/ folder to PATH*
+7) We need to provide the ssh private key for the public key used by our EC2 instance. Check *SSH Agent* and add the key.
+   ![Jenkins project build environment config](./images/ec2_deploy/ec2_deploy_4.png) 
+
+8) Under build we can start building our shell script. Start with just a few steps:
+   1) SSH into the EC2 instance
+   2) update and upgrades packages
+   3) install nginx and then test it's working by going to the instances public IP in the browser
+
+We can do this with the following code:
+```shell
+# ssh into ec2
+ssh -o  "StrictHostKeyChecking=no" ubuntu@3.252.236.184 <<EOF
+# run update and upgrade
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+# install nginx
+sudo apt-get install nginx -y
+sudo systemctl enable nginx
+
+EOF
+
+```
+There's a couple of parts to this script worth closer inspection:
+- `-o "StrictHostKeyChecking=no"` - let's us pass an option with our SSH command. In this case we are turning StrictHostKeyChecking off, meaning we don't have to provide a fingerprint, removing the need for human input
+- `<<EOF` - We are creating a multiline string, that runs between start end end tags `EOF`, this means we can pass it all with our ssh command
+
+We can now open our app up in a browser and check that nginx is running.
+
+Once we're happy we can ssh into our EC2 instance we can then copy files from our jenkins workspace securely:
+```shell
+# copy new code
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@3.252.236.184:/home/ubuntu
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@3.252.236.184:/home/ubuntu
+```
+`rsync` stands for *remote sync*, it tends to be faster than `scp`. The flags work as follows:
+  - `a`- This flag stands for "archive" mode. It is a shortcut that includes several other flags
+  - `v` - triggers *verbose* mode. rsync with give us much more information
+  - `z` - Enables compression during file transfer
+  - `-e` - Specifies remote shell to use, in our case ssh
+  
+Back in our bash terminal ssh'd into the EC2 instance, after running the updated jenkins job we can see that we now have the app and environment folders!
+
+9) we can then manually install all dependencies in bash to make sure they work. This is crucial as it let's us see what works, as well as what doesn't, before writing our script
+10) Update our bash user data script in jenkins. It should now look something like this:
+```shell
+# bypass key checking step/option
+# ssh into ec2
+ssh -o  "StrictHostKeyChecking=no" ubuntu@34.244.64.147 <<EOF
+# run update and upgrade
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+# install nginx
+sudo apt-get install nginx -y
+sudo systemctl enable nginx
+
+# visit public ip to ensure nginx is running
+
+EOF
+
+# copy new code
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@34.244.64.147:/home/ubuntu
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@34.244.64.147:/home/ubuntu
+
+ssh -o  "StrictHostKeyChecking=no" ubuntu@34.244.64.147 <<EOF
+# Install node
+curl -fsSL https://deb.nodesource.com/setup_10.x | sudo DEBIAN_FRONTEND=noninteractive -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+
+# install npm
+sudo apt install npm -y
+
+# cd into app folder
+cd app
+
+# Install node packages
+npm install
+
+# Install pm2
+sudo npm install pm2 -g
+
+# stop any previously running versions of the app
+pm2 stop app
+
+# launch app
+pm2 start app.js 
+
+
+EOF
+```  
+
+NOTE: I've specified a version of node to use, in this case 10.x, to ensure stability going forwards.
+
+11) Run the jenkins job to make sure it works, before running it again on a fresh EC2 instance.
+12) 
+
+- Node version x12
+- pm2 and npm
+- Nginx with reverse proxy 
+- security group
+- SSH from localhost to confirm it all works
+- Npm install & npm start
+
+### Steps
+1) Launch EC2 Instance
+   1) Add port 8080 under inbound rules
+2) Create Jenkins job - notice how we added discard old builds 
+3) Under build, execute shell we have pseudocoded the steps out. We'll gradually build up the complexity. 
 Send the tested code to the ec2 instance.
 
 Should job 2 be triggered by a push/merge to main, or be triggered directly by job 1 (It's ultimately the same code right)?
@@ -155,7 +288,7 @@ Notice that when we bulid and then look in the console output it will tell us th
 rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ip:/home/ubuntu
 rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@ip:/home/ubuntu
 ssh -o "StrictHostKeyChecking=no" ubuntu@ip <<EOF
-	sudo bash ./environment/aap/provision.sh
+	sudo bash ./environment/app/provision.sh
     sudo bash ./environment/db/provision.sh
     cd app
     pm2 kill

@@ -6,24 +6,30 @@ sudo apt-get update -y
 # upgrade any packages available
 sudo apt-get upgrade -y
 
+# install nginx
+sudo apt-get install nginx -y
+sudo systemctl enable nginx
 
 # install git
 sudo apt-get install git -y
 
-# install nodejs
-sudo apt-get install python-software-properties -y
-curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
-sudo apt-get install nodejs -y
+# Install node
+curl -fsSL https://deb.nodesource.com/setup_10.x | sudo DEBIAN_FRONTEND=noninteractive -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 
-# install pm2
+# install npm
+sudo apt install npm -y
+
+# cd into app folder
+cd ~/app
+
+# Install node packages
+npm install
+
+# Install pm2
 sudo npm install pm2 -g
 
-sudo apt-get install nginx -y
+# stop any previously running versions of the app
+pm2 stop app
 
-# remove the old file and add our one
-#sudo rm /etc/nginx/sites-available/default
-#sudo cp /home/ubuntu/sre_jenkins_cicd/environment/app/nginx.default /etc/nginx/sites-available/default
-
-# finally, restart the nginx service so the new config takes hold
-#sudo service nginx restart
-#sudo service nginx enable
+# launch app
+pm2 start app.js 
