@@ -233,7 +233,72 @@ EOF
 NOTE: I've specified a version of node to use, in this case 10.x, to ensure stability going forwards.
 
 11) Run the jenkins job to make sure it works, before running it again on a fresh EC2 instance.
-12) 
+12) Once we're happy the jenkins script works we can move functionality over to the `provision.sh` file, leaving us with the following:
+**provision.sh**
+```bash
+#!/bin/bash
+
+# Update the sources list
+sudo apt-get update -y
+
+# upgrade any packages available
+sudo apt-get upgrade -y
+
+# install nginx
+sudo apt-get install nginx -y
+sudo systemctl enable nginx
+
+# install git
+sudo apt-get install git -y
+
+# Install node
+curl -fsSL https://deb.nodesource.com/setup_10.x | sudo DEBIAN_FRONTEND=noninteractive -E bash - && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
+
+# install npm
+sudo apt install npm -y
+
+# cd into app folder
+cd ~/app
+
+# Install node packages
+npm install
+
+# Install pm2
+sudo npm install pm2 -g
+
+# stop any previously running versions of the app
+pm2 stop app
+
+# launch app
+pm2 start app.js 
+``` 
+
+**jenkins_bash.sh**
+```bash
+EC2_IP=18.201.193.156
+
+# bypass key checking step/option
+# ssh into ec2
+ssh -o  "StrictHostKeyChecking=no" ubuntu@$EC2_IP <<EOF
+# run update and upgrade
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+EOF
+
+# copy new code
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@$EC2_IP:/home/ubuntu
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@$EC2_IP:/home/ubuntu
+
+ssh -o  "StrictHostKeyChecking=no" ubuntu@$EC2_IP <<EOF
+# cd into env app folder
+cd environment/app
+
+chmod +x provision.sh
+./provision.sh
+
+EOF
+```
 
 - Node version x12
 - pm2 and npm
