@@ -96,6 +96,8 @@ https://stackoverflow.com/questions/74698021/installing-node-lib64-libm-so-6-ver
 
 
 
+
+
 ## Guide to creating a job on Jenkins master server
 
 1) Choose create item from the main page, enter a name and then *freestyle project*
