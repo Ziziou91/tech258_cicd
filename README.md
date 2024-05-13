@@ -349,6 +349,12 @@ pm2 start app.js
 EOF
 
 ```
+## Launching the database with a jenkins job
+
+
+
+
+
 
 ## CI testing with tech221 from localhost to Jenkins 
 ## Github ssh set up
