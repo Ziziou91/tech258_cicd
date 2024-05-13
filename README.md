@@ -300,6 +300,13 @@ chmod +x provision.sh
 EOF
 ```
 
+## Consolidating knowledge - creating a Jenkins pipeline to deploy app on an existing EC2 instance
+
+1) Switch to main branch
+2) Check GitHub repo webhook is working
+3) Launch EC2 instance for our app to run on. Use AMI ami-02f0341ac93c96375
+4) Create Jenkins job
+   1) 
 
 
 ## CI testing with tech221 from localhost to Jenkins 
