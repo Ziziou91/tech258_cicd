@@ -40,35 +40,81 @@ Jenkins can be configured to trigger the deployment of your application to a clo
 
 We typically want to our virtual machine before deployment. This allows us to ensure  consistency, reliability, security, and scalability of your deployment process, leading to more robust and efficient application delivery for our end users.
 
+## Deploying a Jenkins application on AWS
+
+1) From the Amazon EC2 dashboard, select Launch Instance.
+2) Choose an Amazon Machine Image (AMI) - for this we'll be using HVM edition of the Amazon Linux AMI.
+3) Create the following Network Security Group settings
+   1) SSH
+   2) HTTP
+   3) Customer TCP - port 8080
+4) Leave other settings standard, launch instance and ssh in
+5) Check for any updates
+   ```shell
+   sudo yum upgrade
+   ```
+6) Add jenkins repo using the following command:
+```shell
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+https://pkg.jenkins.io/redhat-stable/jenkins.repo
+```
+7) Import Jenkins key file
+```shell
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+```
+8) Upgrade
+9) Install Java
+    ```shell
+    sudo dnf install java-17-amazon-corretto -y
+    ```
+   NOTE: Jenkins documentation suggested to use dnf as package manager, but this didn't work
+10) Install jenkins
+```shell
+sudo yum install jenkins -y
+```
+11) enable, stop, start
+12) check it works by going to the url
+13) If so, progress to setting up the jenkins server
+14) Admin password can be found by entering in the ssh bash window:
+```shell
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+15) install git on the jenkins server
+16) Change Git-Host-Key-Verification setting under Global Security...
+17) Install Node
+
+
 ## Guide to creating a job on Jenkins master server
 
 1) Choose create item from the main page, enter a name and then *freestyle project*
 2) Add a description, select the Github project checkbox and then add the project url. Example: `git@github.com:Ziziou91/tech258_cicd.git`
 3) Under *Office 365 Connector* check the option for *Rescrict where this project can be run* and under Label Expression enter `sparta-ubuntu-node`
 ![Jenkin job creation step 1](./images/steps/step_1.png)
-4) Under *Source Code Management* select Git. Then add the repository URL. Because we have SSH set up on the repo we are provided with a message that tells us Jenkins failed to connect to the repo.
-5) We fix this by adding the private SSH key for the repo to our Jenkins, and then choose the credential from the dropdown. CHANGE BRANCH TO MAIN.
+1) Under *Source Code Management* select Git. Then add the repository URL. Because we have SSH set up on the repo we are provided with a message that tells us Jenkins failed to connect to the repo.
+2) We fix this by adding the private SSH key for the repo to our Jenkins, and then choose the credential from the dropdown. CHANGE BRANCH TO MAIN.
 ![Jenkin job creation step 2](./images/steps/step_2.png)
-6) We need to provide Node and npm for our application. Under *Build Environment* check Provide Node & npm bin/ folder to PATH. We then specify the Node installation as `Sparta-Node-JS`
-7) Under *Build* choose execute shell and then add the follow commands
+1) We need to provide Node and npm for our application. Under *Build Environment* check Provide Node & npm bin/ folder to PATH. We then specify the Node installation as `Sparta-Node-JS`
+2) Under *Build* choose execute shell and then add the follow commands
    ```shell
    cd app
    npm install
    npm test
    ``` 
 ![Jenkins job creation step 3](./images/steps/step_3.png)
-8) Save. Our Jenkins Master node should now be setup to build from our github repo.
+1) Save. Our Jenkins Master node should now be setup to build from our github repo.
 
-9) We can also setup our Jenkins master node to automatically build our app and test it on an agent node when triggered by a webhook on our github repo. 
+2) We can also setup our Jenkins master node to automatically build our app and test it on an agent node when triggered by a webhook on our github repo. 
 
-10) Go to the github repo, settings and then webhooks. Under payload URL rnter the url for the jenkins server and append it as so: `http://3.9.14.9:8080/github-webhook/`
-11) For content type choose `application/json`, speifcy the type of event that will trigger the webhook and then set it to active.
-12) The Webhook will send a POST HTTP request to our jenkins server and provide us with a 200 status code if it's setup correctly
+3)  Go to the github repo, settings and then webhooks. Under payload URL rnter the url for the jenkins server and append it as so: `http://3.9.14.9:8080/github-webhook/`
+4)  For content type choose `application/json`, speifcy the type of event that will trigger the webhook and then set it to active.
+5)  The Webhook will send a POST HTTP request to our jenkins server and provide us with a 200 status code if it's setup correctly
 ![Jenkins job creation step 4](./images/steps/step_4.png)
-13) Finally, back on the jenkins config page for our job, under *Build Triggers* check GitHub hook trigger for GITScm polling.
+1)  Finally, back on the jenkins config page for our job, under *Build Triggers* check GitHub hook trigger for GITScm polling.
 ![Jenkins job creation step 5](./images/steps/step_5.png)
  
 Now test the trigger!
+
 
 ## Post-build Actions with Jenkins
 
