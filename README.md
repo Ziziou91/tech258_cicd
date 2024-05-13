@@ -309,6 +309,9 @@ EOF
    1) 
 
 
+
+Script for the new jenkins job goes here.
+
 ## CI testing with tech221 from localhost to Jenkins 
 ## Github ssh set up
 ### Testing Jenkins CI
