@@ -230,7 +230,7 @@ pm2 start app.js
 EOF
 ```  
 
-NOTE: I've specified a version of node to use, in this case 10.x, to ensure stability going forwards.
+NOTE: I've specified a version of Node.js to use, in this case 10.x, to ensure stability going forwards.
 
 11) Run the jenkins job to make sure it works, before running it again on a fresh EC2 instance.
 12) Once we're happy the jenkins script works we can move functionality over to the `provision.sh` file, leaving us with the following:
@@ -299,41 +299,6 @@ chmod +x provision.sh
 
 EOF
 ```
-
-- Node version x12
-- pm2 and npm
-- Nginx with reverse proxy 
-- security group
-- SSH from localhost to confirm it all works
-- Npm install & npm start
-
-### Steps
-1) Launch EC2 Instance
-   1) Add port 8080 under inbound rules
-2) Create Jenkins job - notice how we added discard old builds 
-3) Under build, execute shell we have pseudocoded the steps out. We'll gradually build up the complexity. 
-Send the tested code to the ec2 instance.
-
-Should job 2 be triggered by a push/merge to main, or be triggered directly by job 1 (It's ultimately the same code right)?
-
-
-
-
-3rd job should be to get the code from the main branch and push it to production
-Create an ec2 first with ubuntu 18.04LTS 
-We need to provide a pem key (private ssh key) for jenkins to 
-The first time we connect with the pem key it will automatically ask for a fingerprint - if we were manually ssh’ing into a ec2 instance we’d need to provide a fingerprint. How can we do this automatically on Jenkins?
-We need to provide Jenkins server details (required ports to ssh in) to the EC2 instance so it can allow jenkins server to ssh in 
-Copy the new code to the production environment
-Install required dependencies
-Navigate to app folder
-Npm install
-Npm start
-
-
-
-Notice that when we bulid and then look in the console output it will tell us that it's triggered another build, and also provide a link to the next build.
-
 
 
 

@@ -10,6 +10,17 @@ sudo apt-get upgrade -y
 sudo apt-get install nginx -y
 sudo systemctl enable nginx
 
+# Set reverse proxy in nginx config
+echo setting reverse proxy in nginx/sites-enabled/default
+sudo sed -i '51s/.*/\t        proxy_pass http:\/\/localhost:3000;/' /etc/nginx/sites-enabled/default
+echo DONE reverse proxy set
+
+# restart nginx
+echo restarting nginx...
+sudo systemctl restart nginx
+echo DONE nginx restarted
+
+
 # install git
 sudo apt-get install git -y
 
