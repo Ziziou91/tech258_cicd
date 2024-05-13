@@ -82,12 +82,13 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 15) install git on the jenkins server
 16) Change Git-Host-Key-Verification setting under Global Security...
-17) Install Node
+17) Install Node - specify a node version that is compatible with the Linux version
 18) add node version
 ```url
 JENKINS_URL/configureTools
 ```
 
+https://stackoverflow.com/questions/74698021/installing-node-lib64-libm-so-6-version-glibc-2-27-not-found-required-by-n
 
 
 
