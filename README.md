@@ -87,6 +87,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```url
 JENKINS_URL/configureTools
 ```
+19) SSH Agent
 
 https://stackoverflow.com/questions/74698021/installing-node-lib64-libm-so-6-version-glibc-2-27-not-found-required-by-n
 
