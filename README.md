@@ -302,15 +302,53 @@ EOF
 
 ## Consolidating knowledge - creating a Jenkins pipeline to deploy app on an existing EC2 instance
 
-1) Switch to main branch
-2) Check GitHub repo webhook is working
-3) Launch EC2 instance for our app to run on. Use AMI ami-02f0341ac93c96375
+Monday morning (13/05/24) I created a new job to consolidate last weeks learning. This Jenkins job will the same EC2 instance I was working with on Friday, push any code changes on the main Git branch, then launch the instance.
+
+As all of the first time setup was odne last week on this instance (such as nginx), we can remove many of the commands listed above. Steps taken and new script can be found below
+
+1) Switch to main branch on local machine. Stash and merge any changes with git if required.
+2) Check GitHub repo webhook is working with the Jenkins server. Test the connection on the *webhooks* page
+3) Launch EC2 instance for our app to run on. As we're using last weeks VM we find it in the list of EC2 instances and start it.
 4) Create Jenkins job
-   1) 
+   1) Set the EC2_IP variable to the new public IP address for the instance
+   2) Connect with SSH, update and upgrade the instance
+   3) Copy the new app code to the EC2 instance
+   4) run node scripts (seed.js) and pm2 to launch app in the background
+
+This leaves us with the following script:
+
+```shell
+EC2_IP=3.252.64.118
+
+ssh -o  "StrictHostKeyChecking=no" ubuntu@$EC2_IP <<EOF
+# run update and upgrade
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+EOF
+
+rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@$EC2_IP:/home/ubuntu
+
+ssh -o  "StrictHostKeyChecking=no" ubuntu@$EC2_IP <<EOF
+# navigate to the app folder
+cd app
+
+# install required dependencies / npm install
+npm install
+
+# Install pm2
+sudo npm install pm2 -g
 
 
+# stop any previously running versions of the app
+pm2 stop app
 
-Script for the new jenkins job goes here.
+# launch app
+pm2 start app.js 
+
+EOF
+
+```
 
 ## CI testing with tech221 from localhost to Jenkins 
 ## Github ssh set up
