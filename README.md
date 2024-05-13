@@ -83,6 +83,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 15) install git on the jenkins server
 16) Change Git-Host-Key-Verification setting under Global Security...
 17) Install Node
+18) 
 
 
 ## Guide to creating a job on Jenkins master server
